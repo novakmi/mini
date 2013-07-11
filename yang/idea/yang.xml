@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<filetype binary="false" default_extension="" description="yang" name="yang">
+  <highlighting>
+    <options>
+      <option name="LINE_COMMENT" value="//" />
+      <option name="COMMENT_START" value="/*" />
+      <option name="COMMENT_END" value="*/" />
+      <option name="HEX_PREFIX" value="" />
+      <option name="NUM_POSTFIXES" value="" />
+      <option name="HAS_BRACES" value="true" />
+      <option name="HAS_BRACKETS" value="true" />
+      <option name="HAS_PARENS" value="true" />
+      <option name="HAS_STRING_ESCAPES" value="true" />
+    </options>
+    <keywords keywords="augment;case;choice;container;input;leaf-list;list;must;output;type;typedef;when" ignore_case="false" />
+    <keywords2 keywords="enum;value" />
+    <keywords3 keywords="binary;bits;boolean;decimal64;empty;enumeration;identityref;instance-identifier;int16;int32;int64;int8;leafref;string;uint16;uint32;uint64;uint8;union" />
+    <keywords4 keywords="import;include;module;organization;revision;submodule" />
+  </highlighting>
+  <extensionMap>
+    <mapping ext="yang" />
+  </extensionMap>
+</filetype>
+

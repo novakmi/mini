@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<filetype binary="false" default_extension="" description="asciidoc" name="asciidoc">
+  <highlighting>
+    <options>
+      <option name="LINE_COMMENT" value="// " />
+      <option name="COMMENT_START" value="////" />
+      <option name="COMMENT_END" value="////" />
+      <option name="HEX_PREFIX" value="" />
+      <option name="NUM_POSTFIXES" value="" />
+    </options>
+    <keywords keywords="==;===" ignore_case="true" />
+  </highlighting>
+  <extensionMap>
+    <mapping ext="ad" />
+  </extensionMap>
+</filetype>
+
