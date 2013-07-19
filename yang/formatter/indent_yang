@@ -1,0 +1,57 @@
+#! /bin/sh
+":"; exec emacs -Q --script "$0" -- "$@" # -*-emacs-lisp-*-
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; BEGIN: yang-mode v0.6 2012-02-01 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(require 'cc-mode)
+(eval-when-compile (require 'cc-langs) (require 'cc-fonts))
+(eval-and-compile (c-add-language 'yang-mode 'java-mode))
+(c-lang-defconst c-primitive-type-kwds yang '())
+(c-lang-defconst c-modifier-kwds yang '())
+(c-lang-defconst c-label-kwds yang '())
+(c-lang-defconst c-before-label-kwds yang '())
+(c-lang-defconst c-class-decl-kwds yang '())
+(c-lang-defconst c-decl-start-kwds yang '("anyxml" "argument" "augment" "base" "belongs-to" "bit" "case" "choice" "config" "contact" "container" "default" "description" "deviate" "deviation" "enum" "error-app-tag" "error-message" "extension" "feature" "fraction-digits" "grouping" "identity" "if-feature" "import" "include" "input" "key" "leaf" "leaf-list" "length" "list" "mandatory" "max-elements" "min-elements" "module" "must" "namespace" "notification" "ordered-by" "organization" "output" "path" "pattern" "position" "prefix" "presence" "range" "reference" "refine" "require-instance" "revision" "revision-date" "rpc" "status" "submodule" "type" "typedef" "unique" "units" "uses" "value" "when" "yang-version" "yin-element"))
+(c-lang-defconst c-cpp-matchers yang (c-lang-const c-cpp-matchers))
+(c-lang-defconst c-identifier-syntax-modifications yang (append '((?- . "w") (?: . "w")) (c-lang-const c-identifier-syntax-modifications)))
+(c-lang-defconst c-symbol-chars yang (concat c-alnum ":_-"))
+(c-lang-defconst c-recognize-colon-labels yang nil)
+(defconst yang-font-lock-keywords-1 (c-lang-const c-matchers-1 yang) "Minimal highlighting for YANG mode.")
+(defconst yang-font-lock-keywords-2 (c-lang-const c-matchers-2 yang) "Fast normal highlighting for YANG mode.")
+(defconst yang-font-lock-keywords-3 (c-lang-const c-matchers-3 yang) "Accurate normal highlighting for YANG mode.")
+(defvar yang-font-lock-keywords yang-font-lock-keywords-3 "Default expressions to highlight in YANG mode.")
+(defvar yang-mode-syntax-table nil "Syntax table used in yang-mode buffers.")
+(or yang-mode-syntax-table (setq yang-mode-syntax-table (funcall (c-lang-const c-make-mode-syntax-table yang))))
+(defvar yang-mode-abbrev-table nil "Abbreviation table used in yang-mode buffers.")
+(c-define-abbrev-table 'yang-mode-abbrev-table '())
+(defvar yang-mode-map (let ((map (c-make-inherited-keymap))) map) "Keymap used in yang-mode buffers.")
+(easy-menu-define yang-menu yang-mode-map "YANG Mode Commands" (cons "YANG" (c-lang-const c-mode-menu yang)))
+(add-to-list 'auto-mode-alist '("\\.yang\\'" . yang-mode))
+(defun yang-mode () "Major mode for editing YANG modules." (interactive) (kill-all-local-variables) (c-initialize-cc-mode t) (set-syntax-table yang-mode-syntax-table) (setq major-mode 'yang-mode mode-name "YANG" local-abbrev-table yang-mode-abbrev-table abbrev-mode t) (use-local-map c-mode-map) (c-init-language-vars yang-mode) (c-common-init 'yang-mode) (easy-menu-add yang-menu) (run-hooks 'c-mode-common-hook) (run-hooks 'yang-mode-hook) (c-update-modeline))
+(provide 'yang-mode)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; END: yang-mode v0.6 2012-02-01 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(require 'yang-mode)
+
+(defun indent-whole-buffer ()
+  "Indent whole buffer, remove trailing spaces and convert tabs to spaces"
+  (interactive)
+  (delete-trailing-whitespace)
+  (indent-region (point-min) (point-max) nil)
+  (untabify (point-min) (point-max)))
+
+
+;(print argv)
+(dolist (a argv)
+  (if (string-match "\.yang$" a)
+      (progn
+        (message "INDENTING: '%s'" a)
+        (find-file a)
+        ;(replace-regexp "[     ]+" " " nil (buffer-end -1) (buffer-end 1))
+        (yang-mode)
+        (c-set-style "stroustrup")
+        (indent-whole-buffer)
+        (save-buffer)
+        (kill-buffer)
+        (message "INDENTED: '%s'!" a)
+        )
+    (message "Parameter '%s' ignored!" a)))

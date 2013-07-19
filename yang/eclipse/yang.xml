@@ -1,67 +1,137 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<filetype binary="false" default_extension="" description="yang" name="yang">
-        <highlighting>
-                <options>
-                        <option name="LINE_COMMENT" value="//" />
-                        <option name="COMMENT_START" value="/*" />
-                        <option name="COMMENT_END" value="*/" />
-                        <option name="HEX_PREFIX" value="" />
-                        <option name="NUM_POSTFIXES" value="" />
-                        <option name="HAS_BRACKETS" value="true" />
-                        <option name="HAS_BRACES" value="true" />
-                        <option name="HAS_PARENS" value="true" />
-                        <option name="HAS_STRING_ESCAPES" value="true" />
-                </options>
-                <keywords ignore_case="false">
-                        <keyword name="case" />
-                        <keyword name="choice" />
-                        <keyword name="container" />
-                        <keyword name="leaf-list" />
-                        <keyword name="list" />
-                        <keyword name="type" />
-                        <keyword name="typedef" />
-                        <keyword name="augment" />
-                        <keyword name="when" />
-                        <keyword name="must" />
-                        <keyword name="input" />
-                        <keyword name="output" />
-                </keywords>
-                <keywords2>
-                        <keyword name="enum" />
-                        <keyword name="value" />
-                </keywords2>
-                <keywords3>
-                        <keyword name="binary" />
-                        <keyword name="bits" />
-                        <keyword name="boolean" />
-                        <keyword name="decimal64" />
-                        <keyword name="empty" />
-                        <keyword name="enumeration" />
-                        <keyword name="identityref" />
-                        <keyword name="instance-identifier" />
-                        <keyword name="int16" />
-                        <keyword name="int32" />
-                        <keyword name="int64" />
-                        <keyword name="int8" />
-                        <keyword name="leafref" />
-                        <keyword name="string" />
-                        <keyword name="uint16" />
-                        <keyword name="uint32" />
-                        <keyword name="uint64" />
-                        <keyword name="uint8" />
-                        <keyword name="union" />
-                </keywords3>
-                <keywords4>
-                        <keyword name="import" />
-                        <keyword name="include" />
-                        <keyword name="module" />
-                        <keyword name="submodule" />
-                        <keyword name="organization" />
-                        <keyword name="revision" />
-                </keywords4>
-        </highlighting>
-        <extensionMap>
-                <mapping ext="yang" />
-        </extensionMap>
-</filetype>
+<?xml version="1.0"?>
 
+<!DOCTYPE MODE SYSTEM "xmode.dtd">
+
+<MODE>
+	<PROPS>
+		<PROPERTY NAME="indentOpenBrackets" VALUE="{" />
+		<PROPERTY NAME="indentCloseBrackets" VALUE="}" />
+		<!--PROPERTY NAME="indentPrevLine"
+			VALUE="\s*(((if|while)\s*\(|else\s*(\{|$)|else\s+if\s*\(|case\s+.+:|default:)[^;]*|for\s*\(.*)" /-->
+		<!-- set this to 'true' if you want to use GNU coding style -->
+		<PROPERTY NAME="doubleBracketIndent" VALUE="false" />
+		<PROPERTY NAME="commentStart" VALUE="/*" />
+		<PROPERTY NAME="commentEnd" VALUE="*/" />
+		<PROPERTY NAME="lineComment" VALUE="//" />
+		<PROPERTY NAME="wordBreakChars" VALUE=",+-=&lt;&gt;/?^&amp;*" />
+	</PROPS>
+	<RULES ESCAPE="\" IGNORE_CASE="FALSE" HIGHLIGHT_DIGITS="TRUE">
+		<!-- whitespace: (space and tab) -->
+		<WHITESPACE> </WHITESPACE>
+		<WHITESPACE>	</WHITESPACE>
+
+		<!-- Silly comment -->
+		<SEQ TYPE="COMMENT1">/**/</SEQ>
+
+		<!-- Javadoc comment -->
+		<SPAN TYPE="COMMENT2" DELEGATE="JAVADOC">
+			<BEGIN>/**</BEGIN>
+			<END>*/</END>
+		</SPAN>
+
+		<!-- Java comment (C style) -->
+		<SPAN TYPE="COMMENT1">
+			<BEGIN>/*</BEGIN>
+			<END>*/</END>
+		</SPAN>
+
+		<SPAN TYPE="LITERAL1" NO_LINE_BREAK="TRUE">
+			<BEGIN>"</BEGIN>
+			<END>"</END>
+		</SPAN>
+		<SPAN TYPE="LITERAL1" NO_LINE_BREAK="TRUE">
+			<BEGIN>'</BEGIN>
+			<END>'</END>
+		</SPAN>
+
+		<EOL_SPAN TYPE="COMMENT1">//</EOL_SPAN>
+
+		<SEQ TYPE="NULL">)</SEQ>
+		<SEQ TYPE="OPERATOR">=</SEQ>
+		<SEQ TYPE="OPERATOR">!</SEQ>
+		<SEQ TYPE="OPERATOR">&gt;=</SEQ>
+		<SEQ TYPE="OPERATOR">&lt;=</SEQ>
+		<SEQ TYPE="OPERATOR">+</SEQ>
+		<SEQ TYPE="OPERATOR">-</SEQ>
+		<SEQ TYPE="OPERATOR">/</SEQ>
+
+		<!-- workaround to stop "*" from being colorized
+		     in import statements. -->
+		<SEQ TYPE="NULL">.*</SEQ>
+
+		<SEQ TYPE="OPERATOR">*</SEQ>
+		<SEQ TYPE="OPERATOR">&gt;</SEQ>
+		<SEQ TYPE="OPERATOR">&lt;</SEQ>
+		<SEQ TYPE="OPERATOR">%</SEQ>
+		<SEQ TYPE="OPERATOR">&amp;</SEQ>
+		<SEQ TYPE="OPERATOR">|</SEQ>
+		<SEQ TYPE="OPERATOR">^</SEQ>
+		<SEQ TYPE="OPERATOR">~</SEQ>
+		<SEQ TYPE="OPERATOR">}</SEQ>
+		<SEQ TYPE="OPERATOR">{</SEQ>
+		<SEQ TYPE="NULL">.</SEQ>
+		<SEQ TYPE="NULL">,</SEQ>
+		<SEQ TYPE="NULL">;</SEQ>
+		<SEQ TYPE="NULL">]</SEQ>
+		<SEQ TYPE="NULL">[</SEQ>
+		<SEQ TYPE="NULL">?</SEQ>
+		<MARK_PREVIOUS TYPE="LABEL" EXCLUDE_MATCH="TRUE"
+			AT_LINE_START="TRUE">:</MARK_PREVIOUS>
+		<SEQ TYPE="NULL">:</SEQ>
+		
+		<!-- Function calls -->
+		<MARK_PREVIOUS TYPE="FUNCTION" EXCLUDE_MATCH="TRUE">(</MARK_PREVIOUS>
+
+		<KEYWORDS IGNORE_CASE="FALSE">
+			<KEYWORD1>augment</KEYWORD1>			
+			<KEYWORD1>case</KEYWORD1>
+			<KEYWORD1>choice</KEYWORD1>
+			<KEYWORD1>container</KEYWORD1>
+			<KEYWORD1>grouping</KEYWORD1>
+			<KEYWORD1>input</KEYWORD1>
+			<KEYWORD1>leaf</KEYWORD1>
+			<KEYWORD1>leaf-list</KEYWORD1>
+			<KEYWORD1>list</KEYWORD1>
+			<KEYWORD1>must</KEYWORD1>
+			<KEYWORD1>output</KEYWORD1>
+			<KEYWORD1>type</KEYWORD1>
+			<KEYWORD1>typedef</KEYWORD1>
+			<KEYWORD1>uses</KEYWORD1>
+			<KEYWORD1>when</KEYWORD1>
+			<KEYWORD1>enum</KEYWORD1>
+			<KEYWORD1>value</KEYWORD1>			
+			<KEYWORD2>include</KEYWORD2>
+			<KEYWORD2>import</KEYWORD2>
+			<KEYWORD2>module</KEYWORD2>
+			<KEYWORD2>submodule</KEYWORD2>
+			<KEYWORD2>revision</KEYWORD2>
+			<KEYWORD2>organization</KEYWORD2>
+
+			<KEYWORD3>binary</KEYWORD3>
+			<KEYWORD3>bits</KEYWORD3>			
+			<KEYWORD3>boolean</KEYWORD3>
+			<KEYWORD3>decimal64</KEYWORD3>
+			<KEYWORD3>empty</KEYWORD3>
+			<KEYWORD3>enumeration</KEYWORD3>
+			<KEYWORD3>identityref</KEYWORD3>
+			<KEYWORD3>instance-identifiert</KEYWORD3>
+			<KEYWORD3>int16</KEYWORD3>
+			<KEYWORD3>int32</KEYWORD3>
+			<KEYWORD3>int64</KEYWORD3>
+			<KEYWORD3>uint8</KEYWORD3>
+			<KEYWORD3>uint16</KEYWORD3>
+			<KEYWORD3>uint32</KEYWORD3>
+			<KEYWORD3>uint64</KEYWORD3>
+			<KEYWORD3>leafref</KEYWORD3>
+			<KEYWORD3>string</KEYWORD3>
+			<KEYWORD3>union</KEYWORD3>			
+
+			<LITERAL2>false</LITERAL2>			
+			<LITERAL2>true</LITERAL2>
+
+			<INVALID>goto</INVALID>
+			<INVALID>const</INVALID>
+		</KEYWORDS>
+	</RULES>
+	
+</MODE>
