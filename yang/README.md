@@ -28,3 +28,7 @@ Copy file `idea/yang.xml` to `<idea config dir>/config/filetypes`.  `<idea confi
    * in Eclipse -> Install it as External Tool (uncheck Build before launch), note: Indent only saved file
 
 `indent_yang` file provided by Miroslav Hedl
+
+# Yang modelling tools
+
+See `yangbuilder` at  https://bitbucket.org/novakmi/yangbuilder
