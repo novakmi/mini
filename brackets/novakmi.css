@@ -1,0 +1,10 @@
+/* Copy this file to ~/.config/Brackets/extensions/themes (create if neded)
+/* Inspired by https://github.com/Belar/BearTheme */
+
+/*Main coding area, without line count.*/
+.CodeMirror{background: #ECECCE; font-weight: bold;}
+/*Left bar with line count - it will affect global line count, BUT line count in inline editor won't be changed.*/
+.CodeMirror-gutter{background: #CECEAE;} 
+
+ /*Syntax elements & action*/
+.CodeMirror .cm-string{color: #044604} /*String elements ex. "description" in name="description" - including quotation*/
