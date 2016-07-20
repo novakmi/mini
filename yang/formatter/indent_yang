@@ -3,7 +3,14 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; BEGIN: yang-mode v0.6 2012-02-01 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (require 'cc-mode)
-(eval-when-compile (require 'cc-langs) (require 'cc-fonts))
+(eval-when-compile 
+;; https://github.com/google/protobuf/issues/295 BEGIN
+  (and (= emacs-major-version 24)
+       (>= emacs-minor-version 4)
+       (null emacs-repository-version)
+       (require 'cl))
+;; https://github.com/google/protobuf/issues/295 END
+(require 'cc-langs) (require 'cc-fonts))
 (eval-and-compile (c-add-language 'yang-mode 'java-mode))
 (c-lang-defconst c-primitive-type-kwds yang '())
 (c-lang-defconst c-modifier-kwds yang '())
