@@ -1,0 +1,11 @@
+C_Uncrustify - C formtter
+-------------------------
+
+Put into some directory (in PATH) script and cfg file
+
+Eclipse - External tool
+
+location - path script
+working dir - directory with cfg file
+Arguments : ${resource_loc}
+
