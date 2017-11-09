@@ -1,0 +1,153 @@
+== Gradle docker script(s)
+
+All scripts are Licensed under MIT License (see LICENSE file)
+
+The idea is to provide set of gradle script to automate creation of  Docker images
+for various purposes (running, development, application specific)
+The images are created with generated Dockerfile. Generated docker file can
+be found in the `build` directory.
+
+Following images are implemented:
+
+* Linux development image
+
+The Gradle was chosen for the reason it provides parametrization
+and scripting support in comparison to plain Dockerfile.
+
+Even though Gradle is multiplatform, the build script has been tested
+on Linux only.
+
+One can use https://github.com/felixgborrego/simple-docker-ui as UI front-end.
+
+=== CHANGELOG
+
+|======
+| Version     | Notes                                               | Date        | Author
+| 0.1.0       | Initial version, Linux development image            | 2017-11-09  | Michal Novák
+|======
+
+=== Prerequisites
+
+==== Gradle
+
+Use SDKMAN (http://sdkman.io/install.html) to install gradle
+
+----
+$ curl -s "https://get.sdkman.io" | bash
+$ source "$HOME/.sdkman/bin/sdkman-init.sh"
+$ sdk version
+
+$ sdk install gradle
+----
+
+==== Docker
+
+https://docs.docker.com/engine/installation/
+https://docs.docker.com/engine/installation/linux/docker-ce/ubuntu/#os-requirements
+
+==== Docker Gradle plugin
+
+https://github.com/bmuschko/gradle-docker-plugin
+
+No need to install, will be automatically downloaded
+
+=== Configuration of the gradle build script
+
+Configuration can be updated by using appropriate Gradle project property, e.g.
+`gradle -b docker.gradle buildLinuxDevImage -PBASE_IMAGE_TAG=debian:jessie`,
+environment variable e.g. `export BASE_IMAGE_TAG=debian:jessie` or eventually by direct
+modification in the Gradle script. See section describing individual images for configuration options.
+Default values are hardcoded in the Gradle script.
+
+The Gradle properties have highest priority, then environment variables. The
+lowest priority have values written in the script. In this way it is possible to
+specify configuration without need to modify the script itself.
+
+Following configuration is supported when building all images:
+
+* `BASE_IMAGE_TAG` - name of base image to use in the docker file (default value
+                     differs according to image being build)
+* `IMAGE_TAG` - image tag to use in the docker file (default value
+                 differs according to image being build)
+* `ROOT_PASS` - root password (default is 'docker')
+
+=== Usage
+
+==== Gradle command
+
+Depending on the image being created, run appropriate gradle commands
+(see image description)
+
+To clean build (not delete images), use  command `gradle -b docker.gradle clean`
+
+NOTE:: Short form can be used, e.g.   `gradle -b docker.gradle cLDD` is ame as
+       `gradle -b docker.gradle createLinuxDevDockerfile`
+
+==== Docker commands
+
+* `docker images` - list images
+* `docker rmi <image>` - remove image
+* `docker ps` - list running containers
+* `docker ps -a` - list all containers
+* `docker stop <container_id>` - stop container
+* `docker start <contaier_id>` - start stopped container
+* `docker rm <container_id>` - remove (stopped) container
+* `docker ps -a | grep Exit | cut -d ' ' -f 1 | xargs docker rm` - remove all stopped containers
+* `docker run -p 3322:22 linuxdev` - run `linuxdev` container with default command
+* `docker run -it linuxdev /bin/bash` - create `linuxdev` container and run `bash in it`
+* `docker network create --subnet=172.18.0.0/16 linuxnet` - create docker network
+* `docker run --net linuxnet --ip 172.18.0.2 -h linux-container linuxdev` - run `linuxdev`
+      container with default command in specific network, assign hostname `linux-container`,
+      assign IP address
+
+NOTE:: If `WARNING: IPv4 forwarding is disabled. Networking will not work.`
+       is present, it can be fixed by running `sysctl -w net.ipv4.ip_forward=1` as a root.
+
+=== Images
+
+==== LinuxDev
+
+Linux development environment from Debian based distribution (Debian, Ubuntu)
+
+This image does not fully follow docker container idea as it represent full development
+environment for Linux accessible with `ssh`.
+
+===== Configuration
+
+Configure/Update following properties (default values):
+
+* `BASE_IMAGE_TAG` - the default value is `ubuntu:16:04` (tested also `debian:jessie`)
+* `IMAGE_TAG` - the default value us `linuxdevdev`
+
+Can be set as `gradle` properties, environment variables or modified in the Gradle script.
+
+===== Build and run
+
+* to create only docker file (in the `build` directory)
+** `gradle -b docker.gradle createLinuxDevDockerfile`
+
+* to build image issue commands e.g:
+** `gradle -b docker.gradle buildLinuxDevImage`
+** `gradle -b docker.gradle buildLinuxDevImage -PBASE_IMAGE_TAG=debian:jessie -PIMAGE_TAG=linuxjessie`
+** `gradle -b docker.gradle buildLinuxDDevImage -PBASE_IMAGE_TAG=ubuntu:17.10 -PIMAGE_TAG=linuxub1710`
+
+* to remove image issue command e.g.: `docker rmi --force linuxdev`
+
+* to run container from image:
+** `docker run -p 3322:22 linuxdev`
+** ssh into image `ssh root@localhost -p 3322` or
+   `ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no root@localhost -p 3322`
+   to avoid possible key warnings
+
+* to run container from image with own IP and hostname `linux-container` (example):
+** create network `docker network create --subnet=172.18.0.0/16 linuxnet`
+** start container in network with IP address `docker run --net linuxdnet --ip 172.18.0.2 -h linux-container linuxdev`
+** ssh into image using IP `ssh root@172.18.0.2`
+** finally  (when not needed) remove network with `docker network rm linuxnet`
+
+* to stop container
+** `docker ps` to get container id
+** `docker stop <container id>
+** alternatively press `CTRL+\`
+
+* use linux container in usual way (linux commands - `gcc`, `apt-get`, .. )

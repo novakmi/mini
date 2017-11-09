@@ -1,0 +1,59 @@
+//Licensed under MIT License (see LICENSE file)
+
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.bmuschko:gradle-docker-plugin:3.2.0'
+        classpath 'com.github.ben-manes:gradle-versions-plugin:0.17.0'
+    }
+}
+
+version = "0.1.0"
+println "Docker gradle helper script ver. ${version}"
+
+apply plugin: 'base'
+apply plugin: 'com.bmuschko.docker-remote-api'
+apply plugin: 'com.github.ben-manes.versions' // gradle -b docker.gradle dependencyUpdates -Drevision=release
+
+import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
+import com.bmuschko.gradle.docker.tasks.image.Dockerfile
+
+
+/* Linux development image*/
+task createLinuxDevDockerfile(type: Dockerfile) {
+    ext.BASE_IMAGE_TAG = findProperty("BASE_IMAGE_TAG") ?: System.getenv("BASE_IMAGE_TAG") ?: "ubuntu:16.04"
+    ext.IMAGE_TAG = findProperty("IMAGE_TAG") ?: System.getenv("IMAGE_TAG") ?: "linuxdev"
+    ext.ROOT_PASS = findProperty("ROOT_PASS") ?: System.getenv("ROOT_PASS") ?: "docker"
+    destFile = project.file("build/linuxdevfile/${ext.IMAGE_TAG}.dockerfile")
+    from ext.BASE_IMAGE_TAG
+    maintainer 'Michal Novak "it.novakmi@gmail.com"'
+    runCommand "apt-get update"
+
+    runCommand "apt-get -y install build-essential libssl-dev less mc vim ssh "
+    runCommand "apt-get -y install net-tools iputils-ping traceroute"
+    // add more apt-get lines if needed
+    // enable ssh access for development machine    https://docs.docker.com/engine/examples/running_ssh_service/#build-an-eg_sshd-image
+    runCommand "mkdir /var/run/sshd"
+    runCommand "echo 'root:${ext.ROOT_PASS}' | chpasswd" // password confd
+    runCommand "sed -i 's/PermitRootLogin \\(prohibit\\|without\\)-password/PermitRootLogin yes/' /etc/ssh/sshd_config"
+    runCommand "sed -i 's/#PermitRootLogin/PermitRootLogin/' /etc/ssh/sshd_config"
+    runCommand "sed 's@session\\s*required\\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd"
+    environmentVariable "NOTVISIBLE", "in users profile"
+    runCommand 'echo "export VISIBLE=now" >> /etc/profile'
+    exposePort 22
+    defaultCommand "/usr/sbin/sshd", "-D"
+
+    doFirst {
+        println "Configuration used to create Linux Development Docker image:"
+        println "IMAGE_TAG: ${ext.IMAGE_TAG} BASE_IMAGE_TAG: ${ext.BASE_IMAGE_TAG}"
+    }
+}
+
+task buildLinuxDevImage(type: DockerBuildImage) {
+    dependsOn createLinuxDevDockerfile
+    dockerFile = createLinuxDevDockerfile.destFile
+    inputDir = dockerFile.parentFile
+    tag = createLinuxDevDockerfile.IMAGE_TAG
+}
