@@ -36,7 +36,7 @@ task createLinuxDevDockerfile(type: Dockerfile) {
     // add more apt-get lines if needed
     // enable ssh access for development machine    https://docs.docker.com/engine/examples/running_ssh_service/#build-an-eg_sshd-image
     runCommand "mkdir /var/run/sshd"
-    runCommand "echo 'root:${ext.ROOT_PASS}' | chpasswd" // password confd
+    runCommand "echo 'root:${ext.ROOT_PASS}' | chpasswd" // root password
     runCommand "sed -i 's/PermitRootLogin \\(prohibit\\|without\\)-password/PermitRootLogin yes/' /etc/ssh/sshd_config"
     runCommand "sed -i 's/#PermitRootLogin/PermitRootLogin/' /etc/ssh/sshd_config"
     runCommand "sed 's@session\\s*required\\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd"

@@ -129,7 +129,7 @@ Can be set as `gradle` properties, environment variables or modified in the Grad
 * to build image issue commands e.g:
 ** `gradle -b docker.gradle buildLinuxDevImage`
 ** `gradle -b docker.gradle buildLinuxDevImage -PBASE_IMAGE_TAG=debian:jessie -PIMAGE_TAG=linuxjessie`
-** `gradle -b docker.gradle buildLinuxDDevImage -PBASE_IMAGE_TAG=ubuntu:17.10 -PIMAGE_TAG=linuxub1710`
+** `gradle -b docker.gradle buildLinuxDevImage -PBASE_IMAGE_TAG=ubuntu:17.10 -PIMAGE_TAG=linuxub1710`
 
 * to remove image issue command e.g.: `docker rmi --force linuxdev`
 
