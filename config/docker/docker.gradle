@@ -10,7 +10,7 @@ buildscript {
     }
 }
 
-version = "0.1.0"
+version = "0.2.0"
 println "Docker gradle helper script ver. ${version}"
 
 apply plugin: 'base'
@@ -20,6 +20,26 @@ apply plugin: 'com.github.ben-manes.versions' // gradle -b docker.gradle depende
 import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
 import com.bmuschko.gradle.docker.tasks.image.Dockerfile
 
+def getValOrTrueFalse(prop) {
+    def ret = findProperty(prop) ?: System.getenv(prop) ?: false
+    if (ret == "true") ret = true
+    if (ret == "false") ret = false
+    return ret
+}
+def maintainerId = 'Michal Novak "it.novakmi@gmail.com"'
+def INSTALL_SSH_KEY = getValOrTrueFalse("INSTALL_SSH_KEY")
+
+def installSshKey = {
+    if (INSTALL_SSH_KEY) {
+        if (INSTALL_SSH_KEY == true) {
+            INSTALL_SSH_KEY = "${System.getProperty('user.home')}/.ssh/id_rsa.pub"
+        }
+        INSTALL_SSH_KEY = INSTALL_SSH_KEY.replace("~", System.getProperty('user.home'))
+        String fileContents = new File(INSTALL_SSH_KEY).text
+        runCommand "mkdir -p ~/.ssh"
+        runCommand "echo '${fileContents.trim()}' >> ~/.ssh/authorized_keys"
+    }
+}
 
 /* Linux development image*/
 task createLinuxDevDockerfile(type: Dockerfile) {
@@ -27,8 +47,8 @@ task createLinuxDevDockerfile(type: Dockerfile) {
     ext.IMAGE_TAG = findProperty("IMAGE_TAG") ?: System.getenv("IMAGE_TAG") ?: "linuxdev"
     ext.ROOT_PASS = findProperty("ROOT_PASS") ?: System.getenv("ROOT_PASS") ?: "docker"
     destFile = project.file("build/linuxdevfile/${ext.IMAGE_TAG}.dockerfile")
-    from ext.BASE_IMAGE_TAG
-    maintainer 'Michal Novak "it.novakmi@gmail.com"'
+    from ext.BASE_IMAGE_TAG 
+    maintainer maintainerId
     runCommand "apt-get update"
 
     runCommand "apt-get -y install build-essential libssl-dev less mc vim ssh "
@@ -46,6 +66,7 @@ task createLinuxDevDockerfile(type: Dockerfile) {
     defaultCommand "/usr/sbin/sshd", "-D"
 
     doFirst {
+        with installSshKey
         println "Configuration used to create Linux Development Docker image:"
         println "IMAGE_TAG: ${ext.IMAGE_TAG} BASE_IMAGE_TAG: ${ext.BASE_IMAGE_TAG}"
     }

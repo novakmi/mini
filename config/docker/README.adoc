@@ -24,6 +24,7 @@ One can use https://github.com/felixgborrego/simple-docker-ui as UI front-end.
 |======
 | Version     | Notes                                               | Date        | Author
 | 0.1.0       | Initial version, Linux development image            | 2017-11-09  | Michal Novák
+| 0.2.0       | Added option to copy SSH key                        | 2018-02-07  | Michal Novák
 |======
 
 === Prerequisites
@@ -70,6 +71,9 @@ Following configuration is supported when building all images:
 * `IMAGE_TAG` - image tag to use in the docker file (default value
                  differs according to image being build)
 * `ROOT_PASS` - root password (default is 'docker')
+* `INSTALL_SSH_KEY` - path to local ssh public key file to install into
+   image `authorized_keys` of the `root` user.
+   If set to `true`, the value is `~/.ssh/id_rsa.pub`
 
 === Usage
 
@@ -80,7 +84,7 @@ Depending on the image being created, run appropriate gradle commands
 
 To clean build (not delete images), use  command `gradle -b docker.gradle clean`
 
-NOTE:: Short form can be used, e.g.   `gradle -b docker.gradle cLDD` is ame as
+NOTE:: Short form can be used, e.g.   `gradle -b docker.gradle cLDD` is the same as
        `gradle -b docker.gradle createLinuxDevDockerfile`
 
 ==== Docker commands
@@ -99,20 +103,21 @@ NOTE:: Short form can be used, e.g.   `gradle -b docker.gradle cLDD` is ame as
 * `docker run --net linuxnet --ip 172.18.0.2 -h linux-container linuxdev` - run `linuxdev`
       container with default command in specific network, assign hostname `linux-container`,
       assign IP address
+* docker exec -i -t <id> /bin/bash - run another bash in running container
 
 NOTE:: If `WARNING: IPv4 forwarding is disabled. Networking will not work.`
        is present, it can be fixed by running `sysctl -w net.ipv4.ip_forward=1` as a root.
 
-=== Images
+== Images
 
-==== LinuxDev
+=== LinuxDev
 
 Linux development environment from Debian based distribution (Debian, Ubuntu)
 
 This image does not fully follow docker container idea as it represent full development
 environment for Linux accessible with `ssh`.
 
-===== Configuration
+==== Configuration
 
 Configure/Update following properties (default values):
 
@@ -121,13 +126,14 @@ Configure/Update following properties (default values):
 
 Can be set as `gradle` properties, environment variables or modified in the Gradle script.
 
-===== Build and run
+==== Build and run
 
 * to create only docker file (in the `build` directory)
 ** `gradle -b docker.gradle createLinuxDevDockerfile`
 
 * to build image issue commands e.g:
 ** `gradle -b docker.gradle buildLinuxDevImage`
+** `gradle -b docker.gradle buildLinuxDevImage -PINSTALL_SSH_KEY=true`
 ** `gradle -b docker.gradle buildLinuxDevImage -PBASE_IMAGE_TAG=debian:jessie -PIMAGE_TAG=linuxjessie`
 ** `gradle -b docker.gradle buildLinuxDevImage -PBASE_IMAGE_TAG=ubuntu:17.10 -PIMAGE_TAG=linuxub1710`
 
@@ -135,6 +141,8 @@ Can be set as `gradle` properties, environment variables or modified in the Grad
 
 * to run container from image:
 ** `docker run -p 3322:22 linuxdev`
+** `docker run --privileged -p 3322:22 linuxdev` for privileged mode
+** `docker run -d -p 3322:22 linuxdev` to run in detached mode
 ** ssh into image `ssh root@localhost -p 3322` or
    `ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no root@localhost -p 3322`
    to avoid possible key warnings
