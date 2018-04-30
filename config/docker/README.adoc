@@ -25,6 +25,8 @@ One can use https://github.com/felixgborrego/simple-docker-ui as UI front-end.
 | Version     | Notes                                               | Date        | Author
 | 0.1.0       | Initial version, Linux development image            | 2017-11-09  | Michal Novák
 | 0.2.0       | Added option to copy SSH key                        | 2018-02-07  | Michal Novák
+| 0.3.0       | Reuse - common closures moved to `UxDockerClosures.gradle`,
+                updated gradle docker plugin                        | 2018-04-30  | Michal Novák
 |======
 
 === Prerequisites
@@ -133,7 +135,7 @@ Can be set as `gradle` properties, environment variables or modified in the Grad
 
 * to build image issue commands e.g:
 ** `gradle -b docker.gradle buildLinuxDevImage`
-** `gradle -b docker.gradle buildLinuxDevImage -PINSTALL_SSH_KEY=true`
+** `gradle -b docker.gradle buildLinuxDevImage -PINSTALL_SSH_KEY_UXDKCL=true`
 ** `gradle -b docker.gradle buildLinuxDevImage -PBASE_IMAGE_TAG=debian:jessie -PIMAGE_TAG=linuxjessie`
 ** `gradle -b docker.gradle buildLinuxDevImage -PBASE_IMAGE_TAG=ubuntu:17.10 -PIMAGE_TAG=linuxub1710`
 
@@ -156,6 +158,6 @@ Can be set as `gradle` properties, environment variables or modified in the Grad
 * to stop container
 ** `docker ps` to get container id
 ** `docker stop <container id>
-** alternatively press `CTRL+\`
+** alternatively press `CTRL+\` (for non detached mode)
 
-* use linux container in usual way (linux commands - `gcc`, `apt-get`, .. )
+* use linux container in usual way (linux commands - `gcc`, `ping`, `mc`, ... )

@@ -1,0 +1,180 @@
+/**
+ * Various utility closures for gradle docker plugin to help
+ * install and setup docker linux images.
+ * (currently only Ubuntu (debian) based linux is supported)
+ *
+ * Licensed under MIT License (see LICENSE file)
+ * (c) 2018 Michal Novak, it.novakmi@gmail.com
+ */
+
+ext.getPropValOrTrueFalseUxDkCl = { prop ->
+    logger.debug "==> getPropValOrTrueFalseUxDkCl prop={}", prop
+    def ret = findProperty(prop) ?: System.getenv(prop) ?: false
+    if (ret == "true") ret = true
+    if (ret == "false") ret = false
+    logger.debug "<== getPropValOrTrueFalseUxDkCl ret={}", ret
+    return ret
+}
+
+ext.getPropTrueFalseUxDkCl = { prop ->
+    logger.debug "==> getPropValOrTrueFalseUxDkCl prop={}", prop
+    def ret = findProperty(prop) == "true" ?: System.getenv(prop) ? true : false
+    logger.debug "<== getPropValOrTrueFalseUxDkCl ret={}", ret
+    return ret
+}
+
+ext.getPropUxDkCl = { prop, deflt = null ->
+    logger.debug "==> getPropValOrTrueFalseUxDkCl prop={} deflt={}", prop, deflt
+    def ret = findProperty(prop) ?: System.getenv(prop) ?: deflt
+    logger.debug "<== getPropValOrTrueFalseUxDkCl ret={}", ret
+    return ret
+}
+
+ext.INSTALL_SSH_KEY_UXDKCL = getPropValOrTrueFalseUxDkCl("INSTALL_SSH_KEY_UXDKCL")
+ext.installSshKeyUxDkCl = { myDelegate, sshKey = INSTALL_SSH_KEY_UXDKCL ->
+    logger.info "==> installSshKeyUxDkCl sshKey={}", sshKey
+    delegate = myDelegate
+
+    if (sshKey) {
+        if (sshKey == true) {
+            sshKey = "${System.getProperty('user.home')}/.ssh/id_rsa.pub"
+        }
+        sshKey = sshKey.replace("~", System.getProperty('user.home'))
+        String fileContents = new File(sshKey).text
+        runCommand "mkdir -p ~/.ssh"
+        runCommand "echo '${fileContents.trim()}' >> ~/.ssh/authorized_keys"
+    }
+
+    logger.info "<== installSshKeyUxDkCl"
+}
+
+ext.installPackagesUxDkCl = { myDelegate, packageList, skipUpdate = false ->
+    logger.info "==> installPackagesUxDkCl packageList={}", packageList
+    delegate = myDelegate
+
+    if (project.hasProperty("unixType")) {
+        logger.info("unixType={}", unixType)
+    }
+    def packages = packageList.join(" ")
+    if (!skipUpdate) {
+        runCommand "apt-get update"
+    }
+    runCommand "apt-get -y install $packages"
+
+    logger.info "<== installPackagesUxDkCl"
+}
+
+ext.setupSshAccessUxDkCl = { myDelegate, passwd ->
+    logger.info "==> setupSshAccessUxDkCl"
+    delegate = myDelegate
+
+    installPackagesUxDkCl(delegate, ["ssh"])
+    // enable ssh access for development machine    https://docs.docker.com/engine/examples/running_ssh_service/#build-an-eg_sshd-image
+    runCommand "mkdir /var/run/sshd"
+    runCommand "echo 'root:${passwd}' | chpasswd" // password confd
+    runCommand "sed -i 's/PermitRootLogin \\(prohibit\\|without\\)-password/PermitRootLogin yes/' /etc/ssh/sshd_config"
+    runCommand "sed -i 's/#PermitRootLogin/PermitRootLogin/' /etc/ssh/sshd_config"
+    runCommand "sed 's@session\\s*required\\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd"
+    environmentVariable "NOTVISIBLE", "in users profile"
+    runCommand 'echo "export VISIBLE=now" >> /etc/profile'
+
+    logger.info "<== setupSshAccessUxDkCl"
+}
+
+ext.setupNetworkUtilsUxDkCl = { myDelegate ->
+    logger.info "==> setupNetworkUntilsUxDkCl"
+    delegate = myDelegate
+
+    installPackagesUxDkCl(delegate, ["iputils-ping", "traceroute", "tcpdump", "iptables", "nmap", "net-tools"])
+    //https://github.com/moby/moby/issues/14140
+    runCommand "mv /usr/sbin/tcpdump /usr/bin/tcpdump"
+
+    logger.info "<== setupNetworkUntilsUxDkCl"
+}
+
+ext.setupBuildUtilsUxDkCl = { myDelegate ->
+    logger.info "==> setupBuildUtilsUxDkCl"
+    delegate = myDelegate
+
+    installPackagesUxDkCl(delegate, ["build-essential", "libssl-dev"])
+
+    logger.info "<== setupBuildUtilsUxDkCl"
+}
+
+ext.setupUtilsUxDkCl = { myDelegate ->
+    logger.info "==> setupUtilsUxDkCl"
+    delegate = myDelegate
+
+    installPackagesUxDkCl(delegate, ["mc", "vim", "less", "psmisc"])
+
+    logger.info "<== setupUtilsUxDkCl"
+}
+
+def supervisorConfPath = "/etc/supervisor/conf.d"
+ext.supervisorConfFile = "${supervisorConfPath}/supervisord.conf"
+ext.setupSupervisorUxDkCl = { myDelegate ->
+    logger.info "==> setupSupervisorUxDkCl"
+    delegate = myDelegate
+
+    installPackagesUxDkCl(delegate, ["supervisor"])
+    runCommand "echo '[supervisord]' >> ${supervisorConfFile}"
+    runCommand "echo 'nodaemon=true' >> ${supervisorConfFile}"
+
+    logger.info "<== setupSupervisorUxDkCl"
+}
+
+ext.setupSupervisorProgramUxDkCl = { myDelegate, program, command, params = null ->
+    logger.info "==> setupSupervisorProgramUxDkCl"
+    logger.debug "program={} command={} params={}", program, command, params
+    delegate = myDelegate
+
+    runCommand "echo '' >> ${supervisorConfFile}"
+    runCommand "echo '[program:${program}]' >> ${supervisorConfFile}"
+    if (params) {
+        params.each {p->
+            runCommand "echo '${p}' >> ${supervisorConfFile}"
+        }
+    }
+    runCommand "echo 'command=${command}' >> ${supervisorConfFile}"
+
+    logger.info "<== setupSupervisorProgramUxDkCl"
+}
+
+ext.setupSupervisorSshUxDkCl = { myDelegate, params = null ->
+    logger.info "==> setupSupervisorSshUxDkCl"
+    logger.debug "params={}", params
+    delegate = myDelegate
+
+    setupSupervisorProgramUxDkCl(delegate, "sshd", "/usr/sbin/sshd -D", params)
+
+    logger.info "<== setupSupervisorSshUxDkCl"
+}
+
+ext.setupSupervisorWithSshUxDkCl = { myDelegate, params = null ->
+    logger.info "==> setupSupervisorWithSshUxDkCl"
+    logger.debug "params={}", params
+    delegate = myDelegate
+
+    setupSupervisorUxDkCl(delegate)
+    setupSupervisorSshUxDkCl(delegate, params)
+
+    logger.info "<== setupSupervisorWithSshUxDkCl"
+}
+
+ext.defaultCommandSupervisorUxDkCl = { myDelegate ->
+    logger.info "==> defaultCommandSupervisorUxDkCl"
+    delegate = myDelegate
+
+    defaultCommand "/usr/bin/supervisord"
+
+    logger.info "<== defaultCommandSupervisorUxDkCl"
+}
+
+ext.defaultCommandSshUxDkCl = { myDelegate ->
+    logger.info "==> defaultCommandSshUxDkCl"
+    delegate = myDelegate
+
+    defaultCommand "/usr/sbin/sshd", "-D"
+
+    logger.info "<== defaultCommandSshUxDkCl"
+}
