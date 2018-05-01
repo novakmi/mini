@@ -27,6 +27,8 @@ One can use https://github.com/felixgborrego/simple-docker-ui as UI front-end.
 | 0.2.0       | Added option to copy SSH key                        | 2018-02-07  | Michal Novák
 | 0.3.0       | Reuse - common closures moved to `UxDockerClosures.gradle`,
                 updated gradle docker plugin                        | 2018-04-30  | Michal Novák
+| 0.3.1       | Reuse - `UxDockerClosures.gradle` is now included
+                from versioned bintray repository                   | 2018-04-30  | Michal Novák
 |======
 
 === Prerequisites
@@ -53,6 +55,14 @@ https://docs.docker.com/engine/installation/linux/docker-ce/ubuntu/#os-requireme
 https://github.com/bmuschko/gradle-docker-plugin
 
 No need to install, will be automatically downloaded
+
+==== UxDockerClosures
+
+The `UxDockerClosures.gradle` script is part of this repository and is included by
+gradle script for reuse of common parts. The versioned repository for this
+script can be found here:
+
+https://bintray.com/novakmi/UxDockerClosures/UxDockerClosures
 
 === Configuration of the gradle build script
 
