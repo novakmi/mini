@@ -6,6 +6,7 @@
  * Licensed under MIT License (see LICENSE file)
  * (c) 2018 Michal Novak, it.novakmi@gmail.com
  */
+ext.VersionUxDkCl = "0.4.0"
 
 ext.getPropValOrTrueFalseUxDkCl = { prop ->
     logger.debug "==> getPropValOrTrueFalseUxDkCl prop={}", prop
@@ -31,9 +32,13 @@ ext.getPropUxDkCl = { prop, deflt = null ->
 }
 
 ext.INSTALL_SSH_KEY_UXDKCL = getPropValOrTrueFalseUxDkCl("INSTALL_SSH_KEY_UXDKCL")
-ext.installSshKeyUxDkCl = { myDelegate, sshKey = INSTALL_SSH_KEY_UXDKCL ->
+// pass users like this `installSshKeyUxDkCl(delegate, INSTALL_SSH_KEY_UXDKCL, ["user1", "user2"] as Set)`
+ext.installSshKeyUxDkCl = { myDelegate, sshKey = INSTALL_SSH_KEY_UXDKCL, Set users = null ->
     logger.info "==> installSshKeyUxDkCl sshKey={}", sshKey
     delegate = myDelegate
+    if (users == null) {
+        users = ["root"] as Set
+    }
 
     if (sshKey) {
         if (sshKey == true) {
@@ -41,11 +46,40 @@ ext.installSshKeyUxDkCl = { myDelegate, sshKey = INSTALL_SSH_KEY_UXDKCL ->
         }
         sshKey = sshKey.replace("~", System.getProperty('user.home'))
         String fileContents = new File(sshKey).text
-        runCommand "mkdir -p ~/.ssh"
-        runCommand "echo '${fileContents.trim()}' >> ~/.ssh/authorized_keys"
+        users.each { user ->
+            def homeDir = "/$user"
+            if (user != "root") {
+                homeDir = "/home${homeDir}"
+            }
+            runCommand "mkdir -p ${homeDir}/.ssh"
+            runCommand "echo '${fileContents.trim()}' >> ${homeDir}/.ssh/authorized_keys"
+            if (user != "root") {
+                runCommand "chown -R ${user}:${user} ${homeDir}/.ssh"
+            }
+        }
     }
 
     logger.info "<== installSshKeyUxDkCl"
+}
+
+ext.addLocalUserUxDkkCl = { myDelegate, user, uid = null, pass = null, encryptPass = true ->
+    logger.info "==> addLocalUserUxDkkCl user={} uid={}", user, uid
+    delegate = myDelegate
+    def cmd = "useradd -d /home/${user} -m -s /bin/bash"
+    if (uid != null) {
+        cmd += " -u ${uid}"
+    }
+    if (pass == null) {
+        pass=user // for now password  same as user name
+    }
+    if (encryptPass) {
+        cmd += " -p \$(openssl passwd -1 ${pass})"
+    } else {
+        cmd += " -p ${pass}"
+    }
+    cmd += " ${user}"
+    runCommand cmd
+    logger.info "<== addLocalUserUxDkkCl"
 }
 
 ext.installPackagesUxDkCl = { myDelegate, packageList, skipUpdate = false ->
@@ -64,7 +98,7 @@ ext.installPackagesUxDkCl = { myDelegate, packageList, skipUpdate = false ->
     logger.info "<== installPackagesUxDkCl"
 }
 
-ext.setupSshAccessUxDkCl = { myDelegate, passwd ->
+ext.setupSshRootAccessUxDkCl = { myDelegate, passwd ->
     logger.info "==> setupSshAccessUxDkCl"
     delegate = myDelegate
 
@@ -131,7 +165,7 @@ ext.setupSupervisorProgramUxDkCl = { myDelegate, program, command, params = null
     runCommand "echo '' >> ${supervisorConfFile}"
     runCommand "echo '[program:${program}]' >> ${supervisorConfFile}"
     if (params) {
-        params.each {p->
+        params.each { p ->
             runCommand "echo '${p}' >> ${supervisorConfFile}"
         }
     }

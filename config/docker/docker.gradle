@@ -15,16 +15,16 @@ buildscript {
     }
 }
 
-version = "0.3.1"
+version = "0.3.2"
 println "Docker gradle helper script ver. ${version}"
 
 apply plugin: 'base'
 apply plugin: 'com.bmuschko.docker-remote-api'
 apply plugin: 'com.github.ben-manes.versions' // gradle -b docker.gradle dependencyUpdates -Drevision=release
 // Include docker related closures for build of docker linux images (reuse) form bintray repo
-apply from: "https://bintray.com/novakmi/UxDockerClosures/download_file?file_path=0.3.0/UxDockerClosures.gradle"
+//apply from: "https://bintray.com/novakmi/UxDockerClosures/download_file?file_path=0.3.0/UxDockerClosures.gradle"
 //apply from: "https://raw.githubusercontent.com/novakmi/mini/master/config/docker/UxDockerClosures.gradle" // or from github
-//apply from: "./UxDockerClosures.gradle" // or include from local file
+apply from: "./UxDockerClosures.gradle" // or include from local file
 
 import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
 import com.bmuschko.gradle.docker.tasks.image.Dockerfile
@@ -43,12 +43,12 @@ task createLinuxDevDockerfile(type: Dockerfile) {
     setupBuildUtilsUxDkCl(delegate)
     setupUtilsUxDkCl(delegate)
     setupNetworkUtilsUxDkCl(delegate)
-    setupSshAccessUxDkCl(delegate, ext.ROOT_PASS)
-
+    setupSshRootAccessUxDkCl(delegate, ext.ROOT_PASS)
+    addLocalUserUxDkkCl(delegate, "michal")
     exposePort 22
     defaultCommandSshUxDkCl(delegate)
     doFirst {
-        installSshKeyUxDkCl(delegate)
+        installSshKeyUxDkCl(delegate, INSTALL_SSH_KEY_UXDKCL, ["root", "michal"] as Set)
         println "Configuration used to create Linux Development Docker image:"
         println "IMAGE_TAG: ${ext.IMAGE_TAG} BASE_IMAGE_TAG: ${ext.BASE_IMAGE_TAG}"
     }
