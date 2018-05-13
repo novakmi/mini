@@ -1,0 +1,104 @@
+/*
+ * Licensed under MIT License
+ * (c) 2018 Michal Novak, it.novakmi@gmail.com
+ *
+ * Gradle docker script to create Linux docker image with VPNC and specific user (to seamlessly share files with host machine)
+ * Also installs firefox, thunderbird, git and various utils
+ * Usage e.g.:
+ * gradle -b docker-vpnc.gradle buildLinuxVpncImage -PINSTALL_SSH_KEY_UXDKCL=true -PVPNC_USER=<user> -PVPNC_CONF_FILE=<xxxxxx.conf>
+ *
+ * (see RAEDME, default initial passwd is same as username, change if needed)
+ *
+ * run e.g.
+ * docker run -d --privileged -p 4422:22 -v /home/<user>/vpnc:/home/<user>/vpnc --name linuxvpnc --hostname linuxvpnc linuxvpnc
+ * ssh <user>@localhost -p 4422
+ * Connect VPNC e.g.:
+ *
+ * sudo vpnc-connect xxxxxx
+*/
+
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.bmuschko:gradle-docker-plugin:3.2.8'
+        classpath 'com.github.ben-manes:gradle-versions-plugin:0.17.0'
+    }
+}
+
+version = "0.4.0"
+println "Docker gradle helper script ver. ${version}"
+
+apply plugin: 'base'
+apply plugin: 'com.bmuschko.docker-remote-api'
+apply plugin: 'com.github.ben-manes.versions' // gradle -b docker.gradle dependencyUpdates -Drevision=release
+// Include docker related closures for build of docker linux images (reuse) form bintray repo
+apply from: "https://bintray.com/novakmi/UxDockerClosures/download_file?file_path=0.4.0/UxDockerClosures.gradle"
+//apply from: "./UxDockerClosures.gradle" // or include from local file
+
+import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
+import com.bmuschko.gradle.docker.tasks.image.Dockerfile
+
+def maintainerId = 'Michal Novak "it.novakmi@gmail.com"'
+
+/* Linux development image*/
+task createLinuxVpncDockerfile(type: Dockerfile) {
+    ext.BASE_IMAGE_TAG = getPropUxDkCl("BASE_IMAGE_TAG", "ubuntu:18.04")
+    ext.IMAGE_TAG = getPropUxDkCl("IMAGE_TAG", "linuxvpnc")
+    ext.ROOT_PASS = getPropUxDkCl("ROOT_PASS", "docker")
+    ext.VPNC_USER = getPropUxDkCl("VPNC_USER", "vpnc")
+    ext.VPNC_USER_ID = getPropUxDkCl("VPNC_USER_ID", null)
+    ext.VPNC_CONF_FILE = getPropUxDkCl("VPNC_CONF_FILE", null)
+    destFile = project.file("build/vpncdevfile/${ext.IMAGE_TAG}.dockerfile")
+    from ext.BASE_IMAGE_TAG
+    maintainer maintainerId
+
+    setupUtilsUxDkCl(delegate)
+    setupNetworkUtilsUxDkCl(delegate)
+    installPackagesUxDkCl(delegate, ["vpnc", "sudo", "firefox", "thunderbird", "git", "bash-completion", "htop", "locales"])
+    setupSshRootAccessUxDkCl(delegate, ext.ROOT_PASS)
+    addLocalUserUxDkkCl(delegate, VPNC_USER, VPNC_USER_ID)
+    exposePort 22
+    defaultCommandSshUxDkCl(delegate)
+    copyFile "vpnc-conf", "/etc/vpnc"
+    runCommand "echo \"$VPNC_USER ALL=(ALL) NOPASSWD: ALL\" >> /etc/sudoers"
+    runCommand "locale-gen en_US.UTF-8"
+
+    def localFile = "/etc/profile.d/locale-tweak.sh"
+    // set locales (adjust if needed)
+    runCommand "echo 'export LANG=\"en_US.UTF-8\"' >> ${localFile}"
+    runCommand "echo 'export LC_ALL=\"en_US.UTF-8\"' >> ${localFile}"
+    runCommand "echo 'export LC_MONETARY=\"en_IE.UTF-8\"' >> ${localFile}"
+    runCommand "echo 'export LC_PAPER=\"en_IE.UTF-8\"' >> ${localFile}"
+    runCommand "echo 'export LC_IDENTIFICATION=\"en_IE.UTF-8\"' >> ${localFile}"
+    runCommand "echo 'export LC_NAME=\"en_IE.UTF-8\"' >> ${localFile}"
+    runCommand "echo 'export LC_ADDRESS=\"en_IE.UTF-8\"' >> ${localFile}"
+    runCommand "echo 'export LC_TELEPHONE=\"en_IE.UTF-8\"' >> ${localFile}"
+    runCommand "echo 'export LC_MEASUREMENT=\"en_IE.UTF-8\"' >> ${localFile}"
+    // set timezone (adjust if needed)
+    environmentVariable "TZ", "Europe/Prague"
+    runCommand "DEBIAN_FRONTEND=noninteractive apt-get install -y tzdata"
+    runCommand "echo \$TZ > /etc/timezone"
+    runCommand "rm /etc/localtime"
+    runCommand "dpkg-reconfigure -f noninteractive tzdata"
+
+    doFirst {
+        installSshKeyUxDkCl(delegate, INSTALL_SSH_KEY_UXDKCL, ["root", VPNC_USER] as Set)
+        println "Configuration used to create Vpnc Linux Docker image:"
+        println "IMAGE_TAG: ${IMAGE_TAG} BASE_IMAGE_TAG: ${BASE_IMAGE_TAG} VPNC_USER: ${VPNC_USER} VPNC_CONF_FILE: ${VPNC_CONF_FILE}"
+    }
+}
+
+task buildLinuxVpncImage(type: DockerBuildImage) {
+    dependsOn createLinuxVpncDockerfile
+    dockerFile = createLinuxVpncDockerfile.destFile
+    inputDir = dockerFile.parentFile
+    tag = createLinuxVpncDockerfile.IMAGE_TAG
+    doFirst {
+        copy {
+            from VPNC_CONF_FILE
+            into "${inputDir}/vpnc-conf"
+        }
+    }
+}

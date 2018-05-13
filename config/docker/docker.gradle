@@ -10,7 +10,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'com.bmuschko:gradle-docker-plugin:3.2.7'
+        classpath 'com.bmuschko:gradle-docker-plugin:3.2.8'
         classpath 'com.github.ben-manes:gradle-versions-plugin:0.17.0'
     }
 }
@@ -22,9 +22,9 @@ apply plugin: 'base'
 apply plugin: 'com.bmuschko.docker-remote-api'
 apply plugin: 'com.github.ben-manes.versions' // gradle -b docker.gradle dependencyUpdates -Drevision=release
 // Include docker related closures for build of docker linux images (reuse) form bintray repo
-//apply from: "https://bintray.com/novakmi/UxDockerClosures/download_file?file_path=0.3.0/UxDockerClosures.gradle"
+apply from: "https://bintray.com/novakmi/UxDockerClosures/download_file?file_path=0.4.0/UxDockerClosures.gradle"
 //apply from: "https://raw.githubusercontent.com/novakmi/mini/master/config/docker/UxDockerClosures.gradle" // or from github
-apply from: "./UxDockerClosures.gradle" // or include from local file
+//apply from: "./UxDockerClosures.gradle" // or include from local file
 
 import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
 import com.bmuschko.gradle.docker.tasks.image.Dockerfile
