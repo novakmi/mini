@@ -6,7 +6,7 @@
  * Licensed under MIT License (see LICENSE file)
  * (c) 2018 Michal Novak, it.novakmi@gmail.com
  */
-ext.VersionUxDkCl = "0.4.0"
+ext.VersionUxDkCl = "0.4.1"
 
 ext.getPropValOrTrueFalseUxDkCl = { prop ->
     logger.debug "==> getPropValOrTrueFalseUxDkCl prop={}", prop
@@ -18,16 +18,16 @@ ext.getPropValOrTrueFalseUxDkCl = { prop ->
 }
 
 ext.getPropTrueFalseUxDkCl = { prop ->
-    logger.debug "==> getPropValOrTrueFalseUxDkCl prop={}", prop
+    logger.debug "==> getPropTrueFalseUxDkCl prop={}", prop
     def ret = findProperty(prop) == "true" ?: System.getenv(prop) ? true : false
-    logger.debug "<== getPropValOrTrueFalseUxDkCl ret={}", ret
+    logger.debug "<== getPropTrueFalseUxDkCl ret={}", ret
     return ret
 }
 
 ext.getPropUxDkCl = { prop, deflt = null ->
-    logger.debug "==> getPropValOrTrueFalseUxDkCl prop={} deflt={}", prop, deflt
+    logger.debug "==> getPropUxDkCl prop={} deflt={}", prop, deflt
     def ret = findProperty(prop) ?: System.getenv(prop) ?: deflt
-    logger.debug "<== getPropValOrTrueFalseUxDkCl ret={}", ret
+    logger.debug "<== getPropUxDkCl ret={}", ret
     return ret
 }
 
