@@ -43,6 +43,7 @@
   "Indent whole buffer, remove trailing spaces and convert tabs to spaces"
   (interactive)
   (delete-trailing-whitespace)
+  (setq c-basic-offset 2)
   (indent-region (point-min) (point-max) nil)
   (untabify (point-min) (point-max)))
 
